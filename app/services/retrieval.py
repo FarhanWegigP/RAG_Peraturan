@@ -1,26 +1,22 @@
 """Retrieval korpus peraturan: tabel dokumen, pencarian, RRF, rerank, dan
 ekspansi versi.
 
-`embed.py` tinggal SATU salinan, di akar proyek bareng parser & etl -- modul ini
-MEMAKAINYA, bukan menyalinnya. Dulu ada salinan kedua dan itu sempat menipu:
-perbaikan dipasang di akar, eval tetap memakai salinan lama yang menunjuk korpus
-PDF 139 dokumen. Kalau letaknya pindah, ubah AKAR_PROYEK di .env.
+Encoder pertanyaan dan nama koleksi datang dari `app.services.encoder` -- salinan
+seperlunya dari `embed.py` di repo pengindeksan, supaya layanan ini tidak
+menuntut berkas di luar repo. Bacaan kenapa salinan itu disengaja dan apa yang
+menjaganya tetap sama: docstring encoder.py.
 """
 import logging
 import re
-import sys
-from pathlib import Path
 from typing import Any
 
 from qdrant_client import QdrantClient, models
 
 from app.core.config import settings
+from app.services import encoder as embed
 from app.services.planner import kunci_pencarian
 
 log = logging.getLogger(__name__)
-
-sys.path.insert(0, str(Path(settings.akar_proyek).resolve()))
-import embed  # noqa: E402  (harus setelah sys.path di atas)
 
 # Diisi siapkan(). Dibiarkan None sampai itu supaya impor modul ini tetap
 # murah -- BGE-M3 dan reranker makan ~1 menit dan sebuah GPU.

@@ -5,6 +5,6 @@ pydantic-settings>=2.3
 requests>=2.32
 qdrant-client>=1.9
 sentence-transformers>=3.0     # CrossEncoder (reranker)
-FlagEmbedding>=1.2             # BGE-M3, dipakai lewat embed.py di akar proyek
+FlagEmbedding>=1.2             # BGE-M3, lewat app/services/encoder.py
 torch>=2.2                     # pasang varian CUDA sesuai mesin, lihat pytorch.org
 pytest>=8.0                    # test_logika.py

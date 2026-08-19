@@ -19,13 +19,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from qdrant_client import QdrantClient
 
 from app.core.config import settings
-from app.services import retrieval as R
+from app.services import encoder, retrieval as R
 from app.services.rag import sumber_blok
 
-sys.path.insert(0, str(Path(settings.akar_proyek).resolve()))
-import embed
-
-R.qc = QdrantClient(settings.qdrant_url or embed.QDRANT, timeout=120)
+R.qc = QdrantClient(settings.qdrant_url or encoder.QDRANT, timeout=120)
 
 DOK = sys.argv[1] if len(sys.argv) > 1 else \
     "peraturan-direktur-jenderal-pajak-per-32-pj-2011-db6311"

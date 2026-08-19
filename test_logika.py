@@ -6,6 +6,7 @@ Isinya sel `#### cek:` dari rag.ipynb yang tidak menyentuh indeks. Yang butuh
 Qdrant hidup (riwayat(), ekspansi(), rapikan()) sengaja tidak ikut: kalau mati
 di sini, yang salah kodenya -- bukan jaringan.
 """
+import ast
 import sys
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import pytest
 from app.services.llm import SETELAN, _bersih, _json, setelan
 from app.services.planner import (CAKUPAN, SKEMA_PLANNER, SUB_MAX, SUB_MIN,
                                   turunkan)
+from app.core.config import settings
 from app.services.rag import sumber_blok
 from app.services.retrieval import gabung, tautan
 
@@ -405,3 +407,76 @@ def test_kartu_rantai_merakit_semua_bagian():
     assert teks == gabung(unit)
     # Wakilnya pecahan PERTAMA, bukan yang kebetulan di urutan awal daftar.
     assert kartu[0]["unit_id"].endswith("#b1")
+
+
+# --------------------------------------------------------------------------
+# encoder.py itu SALINAN dari embed.py. Yang di bawah ini alasan salinan itu
+# boleh ada: begitu keduanya menceng, test ini gagal -- bukan pencarian yang
+# diam-diam memburuk berbulan-bulan.
+# --------------------------------------------------------------------------
+def _tanpa_hiasan(simpul):
+    """Sumber satu fungsi tanpa docstring, komentar, dan anotasi tipe.
+
+    Yang diadu perilakunya, bukan gayanya: encoder.py memakai anotasi dan
+    embed.py tidak, dan itu perbedaan yang tidak mengubah satu vektor pun.
+    """
+    simpul.returns = None
+    for a in simpul.args.args + simpul.args.kwonlyargs + simpul.args.posonlyargs:
+        a.annotation = None
+    if (simpul.body and isinstance(simpul.body[0], ast.Expr)
+            and isinstance(simpul.body[0].value, ast.Constant)
+            and isinstance(simpul.body[0].value.value, str)):
+        simpul.body = simpul.body[1:]
+    return ast.unparse(simpul)
+
+
+def _puncak(berkas):
+    """{nama: sumber} untuk konstanta dan fungsi tingkat atas satu berkas."""
+    pohon = ast.parse(Path(berkas).read_text(encoding="utf-8"))
+    keluar = {}
+    for n in pohon.body:
+        if isinstance(n, ast.FunctionDef):
+            keluar[n.name] = _tanpa_hiasan(n)
+        elif isinstance(n, ast.Assign):
+            for t in n.targets:
+                if isinstance(t, ast.Name):
+                    keluar[t.id] = ast.unparse(n.value)
+    return keluar
+
+
+def _sumber_embed():
+    f = Path(settings.akar_proyek) / "embed.py"
+    if not f.exists():
+        pytest.skip(f"embed.py tidak terjangkau di {f} -- AKAR_PROYEK belum diisi")
+    return _puncak(f)
+
+
+# Nama-nama yang encoder.py salin. Kalau ada yang ditambahkan ke encoder.py,
+# tambahkan juga di sini -- salinan yang tidak diadu itu justru yang menceng.
+DISALIN = ["QDRANT", "COLL", "COLL_DOK", "MODEL", "MAX_SEQ", "coll", "encode", "load_model"]
+
+
+@pytest.mark.parametrize("nama", DISALIN)
+def test_encoder_sama_dengan_embed(nama):
+    """encoder.py harus identik dengan embed.py untuk tiap nama yang disalin.
+
+    Bedanya tidak pernah memunculkan error: `max_length` yang berbeda atau
+    sparse yang tidak ikut cuma bikin vektor pertanyaan tidak sebanding dengan
+    vektor korpus, dan hasilnya pencarian yang pelan-pelan meleset.
+    """
+    asli, salinan = _sumber_embed(), _puncak("app/services/encoder.py")
+    assert nama in salinan, f"{nama} hilang dari encoder.py"
+    assert nama in asli, f"{nama} hilang dari embed.py -- salinannya sudah usang"
+    assert salinan[nama] == asli[nama], (
+        f"{nama} MENCENG antara encoder.py dan embed.py:\n"
+        f"  encoder.py: {salinan[nama]}\n"
+        f"  embed.py  : {asli[nama]}")
+
+
+def test_encoder_tidak_menyalin_pengindeksan():
+    """Cuma bagian penyajian yang boleh ikut. index_*/muat_* itu jalur
+    pengindeksan -- tidak pernah dipanggil layanan ini, dan salinan mati adalah
+    salinan yang paling gampang menceng tanpa ketahuan."""
+    salinan = _puncak("app/services/encoder.py")
+    nyasar = [k for k in salinan if k.startswith(("index_", "muat_", "teks_embed"))]
+    assert not nyasar, f"kode pengindeksan ikut tersalin: {nyasar}"

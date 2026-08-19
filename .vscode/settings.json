@@ -1,0 +1,6 @@
+{
+  // ponytail: embed.py di luar workspace, ditambah ke sys.path saat runtime
+  // (retrieval.py). Pylance tidak lihat itu, jadi diberi tahu di sini.
+  // Kalau AKAR_PROYEK di .env pindah, ubah juga path ini.
+  "python.analysis.extraPaths": ["../Magang"]
+}

@@ -1,0 +1,24 @@
+# --- rahasia. .env memuat kunci OpenAI/Groq yang masih aktif.
+.env
+web/.env
+web/.env.local
+*.env.local
+
+# --- lingkungan & dependensi (5,4 GB, dibangun ulang dari requirements.txt / package.json)
+.venv/
+venv/
+web/node_modules/
+node_modules/
+
+# --- hasil build & cache
+web/.next/
+web/out/
+web/tsconfig.tsbuildinfo
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# --- keluaran yang dibuat waktu jalan, bukan sumber
+hasil.txt
+*.log

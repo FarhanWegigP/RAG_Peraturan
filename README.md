@@ -125,14 +125,8 @@ tidak terjangkau, test-nya melewat.
 ## Tes
 
 ```bash
-pytest -q                       # 37 tes, tanpa Qdrant/GPU/LLM
-python cek_pasal17.py           # ekspansi versi satu pasal, butuh Qdrant saja
+pytest -q
 ```
 
-`cek_pasal17.py` mencetak rantai versi lengkap dengan BAHAN dan kartu sumbernya, lalu
-memeriksa kartu itu benar-benar memuat teks yang sama dengan yang dibaca penjawab.
-Bisa diarahkan ke pasal lain:
-
-```bash
-python cek_pasal17.py <document_id> "Pasal 17" as_of 2016
-```
+37 tes logika murni — tanpa Qdrant, tanpa GPU, tanpa LLM. Yang butuh indeks hidup
+sengaja tidak ikut: kalau gagal di sini, yang salah kodenya.
